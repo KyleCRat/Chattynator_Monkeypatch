@@ -1,0 +1,17 @@
+## Interface: 120100, 120007
+## Title: Chattynator Monkeypatch
+## Notes: EllesmereUI Unlock Mode and custom solid or gradient backgrounds for Chattynator.
+## Author: Kyle
+## Version: 12.1.0-1
+## Dependencies: Chattynator, EllesmereUI
+## SavedVariables: ChattynatorMonkeypatchDB
+## Category: Chat
+
+Defaults.lua
+Database.lua
+Adapter.lua
+Background.lua
+Geometry.lua
+Unlock.lua
+Settings.lua
+Core.lua

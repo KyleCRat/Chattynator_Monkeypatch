@@ -1,0 +1,9 @@
+package-as: Chattynator_Monkeypatch
+
+manual-changelog:
+    filename: CHANGELOG.md
+    markup-type: markdown
+
+ignore:
+    - AGENTS.md
+    - tests
