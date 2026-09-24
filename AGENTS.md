@@ -7,7 +7,7 @@ This addon is a runtime compatibility layer. Never copy, replace, or edit depend
 ## Module ownership
 
 - `Database.lua`: SavedVariables defaults, validation, and geometry storage.
-- `Adapter.lua`: dependency discovery and optional Chattynator-facing seams.
+- `Adapter.lua`: dependency discovery, optional Chattynator-facing seams, and bounded copy-message pagination.
 - `Background.lua`: texture selection and solid/gradient rendering.
 - `Geometry.lua`: position and size capture/application.
 - `Unlock.lua`: EllesmereUI registration callbacks.
@@ -34,3 +34,7 @@ After a Chattynator update, verify that `Adapter:Scan()` still detects every win
 - Drag, nudge, resize, reset, save, and discard behave correctly.
 - Entering combat does not produce a blocked-action or taint error.
 - Creating a new window followed by Rescan registers it once.
+- Copy Messages and `/copy` include up to 1,000 available messages in chronological order, including addon prints and dumps. Check filtered tabs, timestamps, and repeated opens.
+- Copy pagination restores temporary method substitutions after success or errors; normal rendering and saved history remain unaffected.
+- The copy scrollbar tracks mouse-wheel and cursor scrolling, supports dragging and paging, and remains usable after short/long copies and repeated opens. Rescans do not duplicate it or shrink the text area again; installation during combat waits for combat to end.
+- Copy Chat moves by left-dragging its title bar while open, without an Unlock Mode entry. Text selection, scrollbar input, and the close button remain usable; position survives reopening and `/reload`. Closing the dialog or entering combat ends an active drag, and pending position changes wait for combat to end.

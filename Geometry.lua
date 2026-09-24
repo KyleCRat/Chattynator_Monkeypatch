@@ -16,6 +16,8 @@ local validPoints = {
 }
 
 local pendingApply = false
+local dragHandles = setmetatable({}, {__mode = "k"})
+local draggingFrame
 
 local function Clamp(value, minimum, maximum)
     if minimum and value < minimum then
@@ -90,6 +92,11 @@ function Geometry:Attach(frame)
 end
 
 function Geometry:ApplyToFrame(frame)
+    -- Do not restore an older saved anchor underneath an active native drag.
+    if frame == draggingFrame then
+        return
+    end
+
     local id = NS.Adapter:GetFrameID(frame)
     local saved = id and NS.Database:GetGeometry(id)
 
@@ -134,7 +141,7 @@ function Geometry:ApplyToFrame(frame)
 end
 
 function Geometry:ApplyAll()
-    for _, frame in ipairs(NS.Adapter:GetFrames()) do
+    for _, frame in ipairs(NS.Adapter:GetMovableFrames()) do
         self:ApplyToFrame(frame)
     end
 end
@@ -198,6 +205,67 @@ function Geometry:SavePosition(id, point, relativePoint, x, y)
     geometry.width, geometry.height = frame:GetSize()
     NS.Database:SetGeometry(id, geometry)
     self:ApplyToFrame(frame)
+end
+
+function Geometry:StopDragging()
+    local frame = draggingFrame
+
+    if not frame then
+        return
+    end
+
+    draggingFrame = nil
+    -- Stop an active native drag even when combat begins or the dialog closes.
+    -- SavePosition defers any subsequent anchor/size application during combat.
+    frame:StopMovingOrSizing()
+
+    if CanChangeGeometry() then
+        frame:SetUserPlaced(false)
+    end
+
+    local point, relativePoint, x, y = ReadPosition(frame)
+    self:SavePosition(NS.Adapter:GetFrameID(frame), point, relativePoint, x, y)
+end
+
+function Geometry:AttachDragHandle(frame, handle)
+    if dragHandles[handle] then
+        return true
+    end
+
+    if not CanChangeGeometry() or frame:IsProtected() or handle:IsProtected() then
+        return false
+    end
+
+    frame:SetMovable(true)
+    frame:SetDontSavePosition(true)
+    frame:SetUserPlaced(false)
+    frame:SetClampedToScreen(true)
+    handle:EnableMouse(true)
+    handle:RegisterForDrag("LeftButton")
+
+    handle:HookScript("OnDragStart", function(_, button)
+        if button ~= "LeftButton" or not CanChangeGeometry() or not frame:IsShown() then
+            return
+        end
+
+        Geometry:StopDragging()
+        frame:StartMoving()
+        draggingFrame = frame
+    end)
+
+    local function StopThisDrag()
+        if draggingFrame == frame then
+            Geometry:StopDragging()
+        end
+    end
+
+    handle:HookScript("OnDragStop", StopThisDrag)
+    frame:HookScript("OnHide", StopThisDrag)
+    frame:HookScript("OnShow", function()
+        Geometry:ApplyToFrame(frame)
+    end)
+    dragHandles[handle] = true
+    return true
 end
 
 function Geometry:SetWidth(id, width)

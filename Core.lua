@@ -6,9 +6,16 @@ end
 
 function NS:RefreshIntegration(applyGeometry)
     local frames = self.Adapter:Scan()
+    self.Adapter:InstallCopyMessagesPatch()
+    self.Adapter:InstallCopyScrollBar()
+
+    for _, frame in ipairs(self.Adapter:GetMovableFrames()) do
+        self.Geometry:Attach(frame)
+    end
+
+    self.Adapter:InstallCopyDragging()
 
     for _, frame in ipairs(frames) do
-        self.Geometry:Attach(frame)
         self.Background:Attach(frame)
     end
 
@@ -44,6 +51,7 @@ handlers.ADDON_LOADED = function(self, loadedAddon)
     end
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
@@ -53,8 +61,14 @@ handlers.PLAYER_ENTERING_WORLD = function()
     end)
 end
 
+handlers.PLAYER_REGEN_DISABLED = function()
+    NS.Geometry:StopDragging()
+end
+
 handlers.PLAYER_REGEN_ENABLED = function()
     NS.Geometry:ApplyPending()
+    NS.Adapter:InstallCopyDragging()
+    NS.Adapter:InstallCopyScrollBar()
 end
 
 eventFrame:SetScript("OnEvent", function(self, event, ...)
